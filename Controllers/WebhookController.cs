@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
+using System.Reflection.Metadata;
 using System.Text.Json;
+using System.Transactions;
+using System.Xml.Linq;
 using TransactionTrackerAPI.models;
 
 namespace TransactionTrackerAPI.Controllers
@@ -18,7 +21,6 @@ namespace TransactionTrackerAPI.Controllers
         }
 
         [HttpPost]
-        [Route("save")]
         public IActionResult HandleWebhook(PaymentNotification webhookData)
         {
             try
@@ -35,25 +37,50 @@ namespace TransactionTrackerAPI.Controllers
                 int paymentAmount = webhookData.Payments[0].Amount.Total;
                 string paymentBank = webhookData.Payments[0].IssuerName;
                 string paymentMethod = webhookData.Payments[0].PaymentMethod;
+                int notificationId = 0;
 
+                using (SqlConnection conn = new SqlConnection(configuration.GetConnectionString("connection")))
+                {
+                    conn.Open();
 
-                // Save the info in database
-                Console.WriteLine($"Request ID: {requestId}");               
-                Console.WriteLine($"Payer Document: {payerDocument}");
-                Console.WriteLine($"Payer Name: {payerName}");
-                Console.WriteLine($"Payer Surname: {payerSurname}");
-                Console.WriteLine($"Payer Email: {payerEmail}");
-                Console.WriteLine($"Payer Mobile: {payerMobile}");
-                Console.WriteLine($"Payment status: {paymentStatus}");
-                Console.WriteLine($"Payment Message: {paymentMessage}");
-                Console.WriteLine($"Payment Date: {paymentDate}");
-                Console.WriteLine($"Payment Amount: {paymentAmount}");
-                Console.WriteLine($"Payment Bank: {paymentBank}");
-                Console.WriteLine($"Payment Method: {paymentMethod}");
+                    using (SqlCommand command = new SqlCommand("InsertNotification", conn))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
 
+                        // Ajustar los nombres de los parámetros según el procedimiento almacenado
+                        command.Parameters.Add(new SqlParameter("@RequestId", SqlDbType.Int) { Value = requestId });
+                        command.Parameters.Add(new SqlParameter("@Document", SqlDbType.NVarChar, 50) { Value = payerDocument });
+                        command.Parameters.Add(new SqlParameter("@PayerName", SqlDbType.NVarChar, 100) { Value = payerName });
+                        command.Parameters.Add(new SqlParameter("@PayerSurname", SqlDbType.NVarChar, 100) { Value = payerSurname });
+                        command.Parameters.Add(new SqlParameter("@PayerEmail", SqlDbType.NVarChar, 100) { Value = payerEmail });
+                        command.Parameters.Add(new SqlParameter("@PayerMobile", SqlDbType.NVarChar, 20) { Value = payerMobile });
+                        command.Parameters.Add(new SqlParameter("@PaymentStatus", SqlDbType.NVarChar, 50) { Value = paymentStatus });
+                        command.Parameters.Add(new SqlParameter("@PaymentMessage", SqlDbType.NVarChar, 255) { Value = paymentMessage });
+                        command.Parameters.Add(new SqlParameter("@PaymentDate", SqlDbType.DateTime) { Value = paymentDate });
+                        command.Parameters.Add(new SqlParameter("@PaymentBank", SqlDbType.NVarChar, 100) { Value = paymentBank });
+                        command.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.NVarChar, 50) { Value = paymentMethod });
 
+                        var notificationIdParameter = new SqlParameter("@NotificationId", SqlDbType.Int);
+                        notificationIdParameter.Direction = ParameterDirection.Output;
+                        command.Parameters.Add(notificationIdParameter);
 
-                return Ok();
+                        command.ExecuteNonQuery();
+
+                        notificationId = (int)notificationIdParameter.Value;
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Notification saved",
+                    result = new
+                    {
+                        requestId,
+                        // ... (otros campos),
+                        notificationId
+                    }
+                });
             }
             catch (Exception ex)
             {
