@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
-using System.Reflection.Metadata;
-using System.Text.Json;
-using System.Transactions;
-using System.Xml.Linq;
 using TransactionTrackerAPI.models;
+using TransactionTrackerAPI.Resources;
 
 namespace TransactionTrackerAPI.Controllers
 {
@@ -14,7 +11,7 @@ namespace TransactionTrackerAPI.Controllers
     public class WebhookController : ControllerBase
     {
         private readonly IConfiguration configuration;
-
+        public LogToFile logging = new LogToFile();
         public WebhookController(IConfiguration configuration)
         {
             this.configuration = configuration;
@@ -31,12 +28,13 @@ namespace TransactionTrackerAPI.Controllers
                 string payerDocument = webhookData.Request.Payer.Document;
                 string payerEmail = webhookData.Request.Payer.Email;
                 string payerMobile = webhookData.Request.Payer.Mobile;
-                string paymentStatus = webhookData.Payments[0].Status.Status;
-                string paymentMessage = webhookData.Payments[0].Status.Message;
-                DateTime paymentDate = webhookData.Payments[0].Status.Date;
-                int paymentAmount = webhookData.Payments[0].Amount.Total;
-                string paymentBank = webhookData.Payments[0].IssuerName;
-                string paymentMethod = webhookData.Payments[0].PaymentMethod;
+                string paymentStatus = webhookData.Payment[0].Status.Status;
+                string paymentMessage = webhookData.Payment[0].Status.Message;
+                DateTime paymentDate = webhookData.Payment[0].Status.Date;
+                int paymentAmount = webhookData.Request.Payment.Amount.Total;
+                string paymentBank = webhookData.Payment[0].IssuerName;
+                string paymentMethod = webhookData.Payment[0].PaymentMethod;
+                DateTime notificationDate = webhookData.Status.Date;
                 int notificationId = 0;
 
                 using (SqlConnection conn = new SqlConnection(configuration.GetConnectionString("connection")))
@@ -59,6 +57,7 @@ namespace TransactionTrackerAPI.Controllers
                         command.Parameters.Add(new SqlParameter("@PaymentDate", SqlDbType.DateTime) { Value = paymentDate });
                         command.Parameters.Add(new SqlParameter("@PaymentBank", SqlDbType.NVarChar, 100) { Value = paymentBank });
                         command.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.NVarChar, 50) { Value = paymentMethod });
+                        command.Parameters.Add(new SqlParameter("@NotificationDate", SqlDbType.DateTime) { Value = notificationDate });
 
                         var notificationIdParameter = new SqlParameter("@NotificationId", SqlDbType.Int);
                         notificationIdParameter.Direction = ParameterDirection.Output;
@@ -69,7 +68,7 @@ namespace TransactionTrackerAPI.Controllers
                         notificationId = (int)notificationIdParameter.Value;
                     }
                 }
-
+                logging.Log($"Notification saved:\n IdNotification {notificationId}");
                 return Ok(new
                 {
                     success = true,
@@ -77,15 +76,15 @@ namespace TransactionTrackerAPI.Controllers
                     result = new
                     {
                         requestId,
-                        // ... (otros campos),
                         notificationId
                     }
                 });
             }
             catch (Exception ex)
             {
-                // Maneja cualquier excepción que pueda ocurrir durante el procesamiento
-                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+                logging.Log($"Error saving notification:\n {ex.Message}");
+
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }
     }

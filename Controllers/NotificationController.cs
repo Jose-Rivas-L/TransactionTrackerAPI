@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using System.Data.SqlClient;
 using System.Data;
+using TransactionTrackerAPI.models;
+using TransactionTrackerAPI.Resources;
 
 namespace TransactionTrackerAPI.Controllers
 {
@@ -10,6 +12,7 @@ namespace TransactionTrackerAPI.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly IConfiguration configuration;
+        public LogToFile logging = new();
         public NotificationController(IConfiguration configuration)
         {
             this.configuration = configuration;
@@ -20,7 +23,7 @@ namespace TransactionTrackerAPI.Controllers
         public ActionResult GetAll() {
             try
             {
-                List<Object> notifications = new List<Object>();
+                List<Notification> notifications = new List<Notification>();
                 using (SqlConnection conn = new SqlConnection(configuration.GetConnectionString("connection")))
                 {
                     conn.Open();
@@ -34,7 +37,7 @@ namespace TransactionTrackerAPI.Controllers
 
                             while (reader.Read())
                             {
-                                var notification = new
+                                var notification = new Notification
                                 {
                                     IdNotification = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                                     RequestId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
@@ -52,11 +55,10 @@ namespace TransactionTrackerAPI.Controllers
                                 };
 
                                 notifications.Add(notification);
-                                Console.WriteLine(notification);
                             }
                         }
                     }
-
+                    logging.Log($"Notifications retrieved:\nrecords: {notifications.Count()}");
                     return Ok(new
                     {
                         success = true,
@@ -67,11 +69,12 @@ namespace TransactionTrackerAPI.Controllers
             }
             catch (Exception ex)
             {
+                logging.Log($"Error getting notifications:\n{ex.Message}");
                 // Maneja cualquier excepción que pueda ocurrir durante el procesamiento
                 return StatusCode(500, new
                 {
                     success = false,
-                    message = $"Error interno del servidor: {ex.Message}"
+                    message = $"Internal Server Error: {ex.Message}"
                 });
             }
         }
@@ -81,7 +84,7 @@ namespace TransactionTrackerAPI.Controllers
         {
             try
             {
-                List<Object> notifications = new List<Object>();
+                List<Notification> notifications = new List<Notification>();
                 using (SqlConnection conn = new SqlConnection(configuration.GetConnectionString("connection")))
                 {
                     conn.Open();
@@ -97,7 +100,7 @@ namespace TransactionTrackerAPI.Controllers
 
                             while (reader.Read())
                             {
-                                var notification = new
+                                var notification = new Notification
                                 {
                                     IdNotification = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                                     RequestId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
@@ -115,26 +118,28 @@ namespace TransactionTrackerAPI.Controllers
                                 };
 
                                 notifications.Add(notification);
-                                Console.WriteLine(notification);
                             }
                         }
                     }
-
+                    LogToFile logging = new LogToFile();
+                    logging.Log($"Notification retrieved:\nrecords: {notifications.Count()}");
                     return Ok(new
                     {
                         success = true,
-                        message = "Notifications retrieved",
+                        message = "Notification retrieved",
                         result = notifications
                     });
                 }
             }
             catch (Exception ex)
             {
-                // Maneja cualquier excepción que pueda ocurrir durante el procesamiento
+                LogToFile logging = new LogToFile();
+                logging.Log($"Error getting notification: \n {ex.Message}");
+
                 return StatusCode(500, new
                 {
                     success = false,
-                    message = $"Error interno del servidor: {ex.Message}"
+                    message = $"Internal Server Error: {ex.Message}"
                 });
             }
         }
