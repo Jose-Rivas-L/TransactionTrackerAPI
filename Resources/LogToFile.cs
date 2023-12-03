@@ -11,7 +11,7 @@
                 Directory.CreateDirectory(resourcesDirectory);
             }
 
-            string logFilePath = Path.Combine(resourcesDirectory, "logfile.txt");
+            string logFilePath = Path.Combine(resourcesDirectory, "logfile.log");
 
             using (StreamWriter writer = new StreamWriter(logFilePath, true))
             {

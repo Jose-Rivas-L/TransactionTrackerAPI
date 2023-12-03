@@ -48,7 +48,7 @@ app.Use(async (context, next) =>
 
             string responseBody = Encoding.UTF8.GetString(memoryStream.ToArray());
 
-            string responseInfo = $"\nMethod: {context.Request.Method}\n" +
+            string responseInfo = $" System log\nMethod: {context.Request.Method}\n" +
                 $"Path: {context.Request.Path}\n" +
                 $"StatusCode: {context.Response.StatusCode}\n" +
                 $"Content-Type: {context.Response.ContentType}\n" +
