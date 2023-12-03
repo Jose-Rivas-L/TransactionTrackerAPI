@@ -121,7 +121,6 @@ namespace TransactionTrackerAPI.Controllers
                             }
                         }
                     }
-                    LogToFile logging = new LogToFile();
                     logging.Log($"Notification retrieved:\nrecords: {notifications.Count()}");
                     return Ok(new
                     {
@@ -133,7 +132,6 @@ namespace TransactionTrackerAPI.Controllers
             }
             catch (Exception ex)
             {
-                LogToFile logging = new LogToFile();
                 logging.Log($"Error getting notification: \n {ex.Message}");
 
                 return StatusCode(500, new

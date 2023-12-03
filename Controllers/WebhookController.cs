@@ -18,7 +18,7 @@ namespace TransactionTrackerAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult HandleWebhook(PaymentNotification webhookData)
+        public IActionResult HandleWebhook([FromBody] PaymentNotification webhookData)
         {
             try
             {
@@ -36,7 +36,6 @@ namespace TransactionTrackerAPI.Controllers
                 string paymentMethod = webhookData.Payment[0].PaymentMethod;
                 DateTime notificationDate = webhookData.Status.Date;
                 int notificationId = 0;
-
                 using (SqlConnection conn = new SqlConnection(configuration.GetConnectionString("connection")))
                 {
                     conn.Open();
@@ -68,7 +67,6 @@ namespace TransactionTrackerAPI.Controllers
                         notificationId = (int)notificationIdParameter.Value;
                     }
                 }
-                logging.Log($"Notification saved:\n IdNotification {notificationId}");
                 return Ok(new
                 {
                     success = true,
@@ -80,14 +78,24 @@ namespace TransactionTrackerAPI.Controllers
                     }
                 });
             }
+            catch (SqlException sqlEx)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error saving notification",
+                    error = $"SQL Error: {sqlEx.Message}"
+                });
+            }
             catch (Exception ex)
             {
-                logging.Log($"Error saving notification:\n {ex.Message}");
-
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Internal Server Error",
+                    error = $"Error handling webhook: {ex.Message}"
+                });
             }
         }
     }
-
-
 }
