@@ -11,4 +11,10 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\ui\index.html" />
+    <None Include="wwwroot\ui\scripts.js" />
+    <None Include="wwwroot\ui\styles.css" />
+  </ItemGroup>
+
 </Project>

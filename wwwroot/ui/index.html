@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/ui/styles.css">
+    <title>Transaction Tracker</title>
+</head>
+<body>
+    <h1>Transaction Tracker</h1>
+
+    <div>
+        <h2>All Notifications</h2>
+        <button onclick="getAllNotifications()">Get All</button>
+        <ul id="allNotifications"></ul>
+    </div>
+
+    <div>
+        <h2>Notification by ID</h2>
+        <label for="notificationId">Enter ID:</label>
+        <input type="text" id="notificationId">
+        <button onclick="getNotificationById()">Get by ID</button>
+        <div id="notificationResult"></div>
+    </div>
+
+    <script src="/ui/scripts.js"></script>
+</body>
+</html>

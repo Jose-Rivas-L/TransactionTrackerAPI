@@ -15,6 +15,6 @@
         public StatusInfo Status { get; }
         public RequestInfo Request { get; }
         public List<PaymentInfo> Payment { get; }
-        public string Subscription { get; }
+        public string? Subscription { get; }
     }
 }

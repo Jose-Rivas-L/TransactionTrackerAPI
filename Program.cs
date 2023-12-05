@@ -83,6 +83,14 @@ else
 {
     app.UseEndpoints(endpoints =>
     {
+        app.UseStaticFiles();
+        // Redirect to Swagger when accessing the root path
+        endpoints.MapGet("/", context =>
+        {
+            context.Response.Redirect("/ui/index.html");
+            return Task.CompletedTask;
+        });
+
         endpoints.MapControllers();
     });
 }
