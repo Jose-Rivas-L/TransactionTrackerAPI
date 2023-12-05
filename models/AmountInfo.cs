@@ -2,13 +2,18 @@
 {
     public class AmountInfo
     {
-        public AmountInfo(string currency, int total)
-        {
-            Currency = currency;
-            Total = total;
-        }
+        public string? Currency { get; set; }
+        public int? Total { get; set; }
 
-        public string Currency { get;}
-        public int Total { get; }
+        // Nuevas propiedades opcionales para manejar diferentes formatos
+        public AmountDetails? To { get; set; }
+        public AmountDetails? From { get; set; }
+        public int? Factor { get; set; }
+    }
+
+    public class AmountDetails
+    {
+        public int Total { get; set; }
+        public string Currency { get; set; }
     }
 }

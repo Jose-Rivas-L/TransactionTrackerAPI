@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.SqlClient;
 using TransactionTrackerAPI.models;
-using TransactionTrackerAPI.Resources;
 
 namespace TransactionTrackerAPI.Controllers
 {
